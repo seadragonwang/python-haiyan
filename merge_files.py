@@ -28,8 +28,9 @@ def process(source_file_1, source_file_2, output_file):
     data = [*extract("/Users/hwang202/Downloads/11_JS0107CD100319.avinput.txt")]
     data2 = [*addAdditionalColumns("/Users/hwang202/Downloads/11_JS0107CD100319.avout.hg19_multianno.txt")]
 
-    with open('output_file', 'w', newline='') as csvfile:
+    with open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        i = 0
         while i < len(data2):
             data2[i].append(data[i][0])
             data2[i].append(data[i][1])
