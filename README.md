@@ -14,7 +14,7 @@ GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
 
 1/1:58:11:11:0:11:100%:1.4176E-6:0:45:0:0:6:5
 
-then from 4th to 7th values will be extracted as seperate columns, 17th column is extracted only onece as header.0
+then from 4th to 7th values will be extracted as seperate columns, 17th column is extracted only once as header.
 Here is the example:
 
 DP, RD, AD, FREQ
