@@ -18,6 +18,7 @@ then from 4th to 7th values will be extracted as seperate columns, 17th column i
 Here is the example:
 
 DP, RD, AD, FREQ
+
 11, 0, 11, 100%
 
 
