@@ -8,11 +8,11 @@ def extract(filename):
         head = True
         for row in reader:
             if head:
-                yield row[16].split(":")[3:7]
-                yield row[17].split(":")[3:7]
+                yield row[16].split(":")[2:6]
+                yield row[17].split(":")[2:6]
                 head = False
             else:
-                yield row[17].split(":")[3:7]
+                yield row[17].split(":")[2:6]
 
 
 def addAdditionalColumns(filename):
@@ -25,8 +25,8 @@ def addAdditionalColumns(filename):
 
 
 def process(source_file_1, source_file_2, output_file):
-    data = [*extract("/Users/hwang202/Downloads/11_JS0107CD100319.avinput.txt")]
-    data2 = [*addAdditionalColumns("/Users/hwang202/Downloads/11_JS0107CD100319.avout.hg19_multianno.txt")]
+    data = [*extract(source_file_1)]
+    data2 = [*addAdditionalColumns(source_file_2)]
 
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
