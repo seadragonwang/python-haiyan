@@ -1,7 +1,7 @@
 # python-haiyan
 All kinds of python utility functions needed by haiyan
 
-
+# Merge files
 Usages:
 
 Source files are tab seperated, and useful information should be in 17th and 18th columns of first source file, example as below
@@ -23,3 +23,7 @@ DP, RD, AD, FREQ
 
 
 python3 merge_files.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --output_file [output file]
+
+# Deduplicate rows of csv file based on gene name
+
+python3 deduplicate_gene_name.py --source_file [source file] --output_file [output file]
