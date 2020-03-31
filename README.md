@@ -27,3 +27,11 @@ python3 merge_files.py --source_file_1 [1st source file] --source_file_2 [2nd so
 # Deduplicate rows of csv file based on gene name
 
 python3 deduplicate_gene_name.py --source_file [source file] --output_file [output file]
+
+# Calculate the ratio of column 6 over column 2, then calculate ratio of these 2 calculated values
+
+python3 calculate_ratio.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --output_file [output file]
+
+# Intersect 2 files based on gene name.
+
+python3 gene_intersect.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --columns [0,7] --output_file [output file]
