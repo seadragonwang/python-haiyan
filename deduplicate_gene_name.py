@@ -9,6 +9,10 @@ def deduplicate(filename):
         for row in reader:
             if row[3] not in genes:
                 genes.add(row[3])
+                if int(row[2]) < int(row[1]):
+                    tmp = row[2]
+                    row[2] = row[1]
+                    row[1] = tmp;
                 yield row
 
 
