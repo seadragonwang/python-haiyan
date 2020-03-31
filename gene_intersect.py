@@ -23,7 +23,7 @@ def intersect(source_file_1, source_file_2, columns, output_file):
         writer = csv.writer(csvfile, delimiter='\t', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for key in data.keys():
             if key in data2.keys():
-                writer.writerow(key, data[key] + data2[key])
+                writer.writerow([key] + data[key] + data2[key])
 
 
 if __name__ == '__main__':
