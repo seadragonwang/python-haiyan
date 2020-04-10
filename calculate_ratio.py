@@ -19,14 +19,12 @@ def calculateRatio(source_file_1, source_file_2, columns, output_file):
             for key in data.keys():
                 if key in data2.keys():
                     row = []
-                    skip = False
                     for col in columns:
                         if '/' in col:
                             cols = col.split('/')
                             if cols[0] and cols[1]:
                                 if float(data2[key][int(cols[1])]) == 0:
-                                    skip = True;
-                                    break;
+                                    row.append(float("inf"))
                                 else:
                                     row.append(float(data[key][int(cols[0])]) / float(data2[key][int(cols[1])]))
                             elif cols[0]:
@@ -37,8 +35,6 @@ def calculateRatio(source_file_1, source_file_2, columns, output_file):
 
                         else:
                             row.append(data[key][int(col)])
-                    if skip:
-                        continue;
                     writer.writerow(row)
     else:
         with open(output_file, 'w', newline='') as csvfile:
