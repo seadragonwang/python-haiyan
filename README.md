@@ -1,28 +1,33 @@
 # python-haiyan
 All kinds of python utility functions needed by haiyan
 
+# Extract columns from a file
+### Usages:
+python data_analyzer --action extract --source_file file_name -column column_index/column_separator/field_indices/column_names --output_file output_file_name
+
+###For example:
+python data_analyzer --action extract --source_file test.avinput.txt --column "17/:/1-2/AD,RD" --head False --output_file test_avinput_output.csv
+
+# Split columns from a file
+### Usages:
+python data_analyzer --action split --source_file file_name -column column_index/column_separator/field_indices/column_names --output_file output_file_name
+
+###For example:
+python data_analyzer --action split --source_file test_avinput_output.csv --column "0/,/0-1/AD,RD" --head True --output_file test_avinput_split_output.csv
+
+# Calculate ratio from columns from a file
+### Usages:
+python data_analyzer --action split --source_file file_name -column nominator_column_index/denominator_column_index/column_name,nominator_column_index/denominator_column_index/column_name --head True --output_file output_file_name
+
+###For example:
+python data_analyzer --action calculate_ratio --source_file test_avinput_split_output.csv --column "0/2/Freq" --head True --output_file test_avinput_split_ratio_output.csv
+
 # Merge files
-Usages:
-
-Source files are tab seperated, and useful information should be in 17th and 18th columns of first source file, example as below
-
-17th column:
-
-GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
-
-18th column:
-
-1/1:58:11:11:0:11:100%:1.4176E-6:0:45:0:0:6:5
-
-then from 4th to 7th values will be extracted as seperate columns, 17th column is extracted only once as header.
-Here is the example:
-
-DP, RD, AD, FREQ
-
-11, 0, 11, 100%
-
-
-python3 merge_files.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --output_file [output file]
+### Usages:
+python data_analyzer --action merge --source_file file_name_1:True,file_name_2:False --output_file output_file_name
+ 
+### For example:
+python data_analyzer --action merge --source_file test.amino.txt:True,test_avinput_split_ratio_output.csv:True --output_file merged_output_file.csv
 
 # Deduplicate rows of csv file based on gene name
 
