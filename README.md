@@ -29,6 +29,13 @@ python data_analyzer --action merge --source_file file_name_1:True,file_name_2:F
 ### For example:
 python data_analyzer --action merge --source_file test.amino.txt:True,test_avinput_split_ratio_output.csv:True --output_file merged_output_file.csv
 
+# Search by gene name
+### Usages:
+python data_analyzer --action search_by_gene_name --source_file file_name_1 --column_index 15 --gene_name nf1 --column_delimiter tab --gene_delimiter ; --head True --output_file output_file_name
+ 
+### For example:
+python data_analyzer --action search_by_gene_name --source_file search-by-gene-name.txt --columns 8 --column_delimiter tab --gene_delimiter ; --head True --gene_name WASH7P --output_file search_by_gene_name_output.txt
+
 # Deduplicate rows of csv file based on gene name
 
 python3 deduplicate_gene_name.py --source_file [source file] --output_file [output file]

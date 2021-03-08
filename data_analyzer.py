@@ -153,6 +153,24 @@ class DataAnalyzer:
 			for i in range(0, len(data)):
 				file.write('\t'.join(data[i]) + '\n')
 
+	def search_by_gene_name(self, input_filename, column_index, gene_name, column_delimiter, gene_delimiter, head, output_filename):
+		if column_delimiter == 'tab':
+			column_delimiter = '\t'
+		with open(output_filename, 'w', newline='') as output_file:
+			with open(input_filename, newline='') as input_file:
+				head_line = None
+				if head:
+					head_line = input_file.readline()
+					output_file.write(head_line)
+				while True:
+					line = input_file.readline()
+					if not line:
+						break
+					cols = line.split(column_delimiter)
+					if cols[column_index]:
+						genes = [*map(lambda s: s.lower(), cols[column_index].split(gene_delimiter))]
+						if gene_name.lower() in genes:
+							output_file.write(line)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Calculate the ratio of column 6 over column 2. ")
@@ -162,6 +180,9 @@ if __name__ == '__main__':
 	parser.add_argument('--source_file', help="A source file delimited by tab ", action='store', dest='source_file')
 	parser.add_argument('--columns', help="pairs of columns", action='store', dest='columns')
 	parser.add_argument('--head', help="if there is a head row", action='store', dest='head')
+	parser.add_argument('--column_delimiter', help="column delimiter", action='store', dest='column_delimiter')
+	parser.add_argument('--gene_delimiter', help="gene delimiter", action='store', dest='gene_delimiter')
+	parser.add_argument('--gene_name', help="gene name", action='store', dest='gene_name')
 	parser.add_argument('--output_file', help='The output file', action='store', dest='output_file')
 
 	args = parser.parse_args()
@@ -176,6 +197,14 @@ if __name__ == '__main__':
 		data_analyzer.merge_files(args.source_file, args.output_file)
 	elif args.action == 'calculate_ratio':
 		data_analyzer.calculate_ratio(args.source_file, args.columns, head, args.output_file)
+	elif args.action == 'search_by_gene_name':
+		data_analyzer.search_by_gene_name(args.source_file,
+										  int(args.columns.split(',')[0]),
+										  args.gene_name,
+										  args.column_delimiter,
+										  args.gene_delimiter,
+										  head,
+										  args.output_file)
 	else:
 		usage = """
 			Here are actions supported right now:
