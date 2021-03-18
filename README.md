@@ -15,12 +15,19 @@ python data_analyzer --action split --source_file file_name -column column_index
 ###For example:
 python data_analyzer --action split --source_file test_avinput_output.csv --column "0/,/0-1/AD,RD" --head True --output_file test_avinput_split_output.csv
 
-# Calculate ratio from columns from a file
+# Insert a new column with ratio of 2 columns from a file
 ### Usages:
-python data_analyzer --action split --source_file file_name -column nominator_column_index/denominator_column_index/column_name,nominator_column_index/denominator_column_index/column_name --head True --output_file output_file_name
+python data_analyzer --action divide --source_file file_name -columns column_1_index/column_2_index/column_name,column_1_index/column_2_index/column_name --head True --output_file output_file_name
 
 ###For example:
-python data_analyzer --action calculate_ratio --source_file test_avinput_split_output.csv --column "0/2/Freq" --head True --output_file test_avinput_split_ratio_output.csv
+python data_analyzer --action divide --source_file test_avinput_split_output.csv --columns "0/2/Freq" --head True --output_file test_avinput_split_ratio_output.csv
+
+# Insert a new column with sum of 2 columns from a file
+### Usages:
+python data_analyzer --action add --source_file file_name -columns column_1_index/column_2_index/column_name,column_1_index/column_2_index/column_name --head True --output_file output_file_name
+
+###For example:
+python data_analyzer --action add --source_file test_avinput_split_output.csv --columns "0/2/Freq" --head True --output_file test_avinput_split_ratio_output.csv
 
 # Merge files
 ### Usages:

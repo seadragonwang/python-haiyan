@@ -9,7 +9,7 @@ class InvalidParameterValueException(Exception):
 		self._message = message
 
 
-class Divider:
+class Operator:
 	def __init__(self, format):
 		fields = format.split('/')
 		self._numerator = int(fields[0])
@@ -110,7 +110,7 @@ class DataAnalyzer:
 				line = file.readline()
 				if not line:
 					break
-				cols = line.split(self._column_seperator)
+				cols = line.rstrip('\n').split(self._column_seperator)
 				try:
 					fs = np.array(cols[column._column].split(column._delimiter))
 					yield np.concatenate(
@@ -123,14 +123,14 @@ class DataAnalyzer:
 		data = [*self._split(source_file, head, columns)]
 		with open(output_file, 'w', newline='') as file:
 			for i in range(0, len(data)):
-				file.write('\t'.join(data[i]))
+				file.write('\t'.join(data[i]) + '\n')
 
-	def _parse_divider(self, format):
+	def _parse_operator(self, format):
 		for d in format.split(','):
-			yield (Divider(d))
+			yield (Operator(d))
 
-	def calculate_ratio(self, source_file, columns, head, output_file):
-		dividers = [*self._parse_divider(columns)]
+	def divide(self, source_file, columns, head, output_file):
+		operators = [*self._parse_operator(columns)]
 		data = []
 
 		with open(source_file, newline='') as file:
@@ -142,12 +142,36 @@ class DataAnalyzer:
 				if not line:
 					break
 				data.append(line.rstrip('\n').split(self._column_seperator))
-		for divider in dividers:
+		for divider in operators:
 			column_names.append(divider._column_name)
 		for row in data:
-			for divider in dividers:
-				if float(row[divider._denominator]) > 0:
-					row.append("{:.2f}".format(float(row[divider._numerator]) / float(row[divider._denominator])))
+			for operator in operators:
+				if float(row[operator._denominator]) > 0:
+					row.append("{:.2f}".format(float(row[operator._numerator]) / float(row[operator._denominator])))
+
+		with open(output_file, 'w', newline='') as file:
+			file.write('\t'.join(column_names) + '\n')
+			for i in range(0, len(data)):
+				file.write('\t'.join(data[i]) + '\n')
+
+	def add(self, source_file, columns, head, output_file):
+		operators = [*self._parse_operator(columns)]
+		data = []
+
+		with open(source_file, newline='') as file:
+			column_names = None
+			if head:
+				column_names = file.readline().rstrip('\n').split(self._column_seperator)
+			while True:
+				line = file.readline()
+				if not line:
+					break
+				data.append(line.rstrip('\n').split(self._column_seperator))
+		for operator in operators:
+			column_names.append(operator._column_name)
+		for row in data:
+			for operator in operators:
+				row.append("{:.2f}".format(float(row[operator._numerator]) + float(row[operator._denominator])))
 
 		with open(output_file, 'w', newline='') as file:
 			file.write('\t'.join(column_names) + '\n')
@@ -173,6 +197,7 @@ class DataAnalyzer:
 						if gene_name.lower() in genes:
 							output_file.write(line)
 
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Calculate the ratio of column 6 over column 2. ")
 	parser.add_argument('--action',
@@ -196,8 +221,10 @@ if __name__ == '__main__':
 		data_analyzer.split_columns(args.source_file, args.columns, head, args.output_file)
 	elif args.action == 'merge':
 		data_analyzer.merge_files(args.source_file, args.output_file)
-	elif args.action == 'calculate_ratio':
-		data_analyzer.calculate_ratio(args.source_file, args.columns, head, args.output_file)
+	elif args.action == 'add':
+		data_analyzer.add(args.source_file, args.columns, head, args.output_file)
+	elif args.action == 'divide':
+		data_analyzer.divide(args.source_file, args.columns, head, args.output_file)
 	elif args.action == 'search_by_gene_name':
 		data_analyzer.search_by_gene_name(args.source_file,
 										  int(args.columns.split(',')[0]),
@@ -212,6 +239,7 @@ if __name__ == '__main__':
 				- extract
 				- split
 				- merge
-				- calculate_ratio"""
+				- add
+				- divide"""
 
 		logging.info(usage)
