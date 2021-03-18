@@ -171,7 +171,7 @@ class DataAnalyzer:
 			column_names.append(operator._column_name)
 		for row in data:
 			for operator in operators:
-				row.append(int(row[operator._numerator]) + int(row[operator._denominator]))
+				row.append(str(int(row[operator._numerator]) + int(row[operator._denominator])))
 
 		with open(output_file, 'w', newline='') as file:
 			file.write('\t'.join(column_names) + '\n')
