@@ -146,7 +146,8 @@ class DataAnalyzer:
 			column_names.append(divider._column_name)
 		for row in data:
 			for divider in dividers:
-				row.append("{:.2f}".format(float(row[divider._numerator]) / float(row[divider._denominator])))
+				if float(row[divider._denominator]) > 0:
+					row.append("{:.2f}".format(float(row[divider._numerator]) / float(row[divider._denominator])))
 
 		with open(output_file, 'w', newline='') as file:
 			file.write('\t'.join(column_names) + '\n')
