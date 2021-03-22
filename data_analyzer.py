@@ -178,7 +178,8 @@ class DataAnalyzer:
 			for i in range(0, len(data)):
 				file.write('\t'.join(data[i]) + '\n')
 
-	def search_by_gene_name(self, input_filename, column_index, gene_name, column_delimiter, gene_delimiter, head, output_filename):
+	def search_by_gene_name(self, input_filename, column_index, gene_names, column_delimiter, gene_delimiter, head, output_filename):
+		gene_set = set(map(lambda s: s.lower().strip(), gene_names.split(',')))
 		if column_delimiter == 'tab':
 			column_delimiter = '\t'
 		with open(output_filename, 'w', newline='') as output_file:
@@ -193,8 +194,8 @@ class DataAnalyzer:
 						break
 					cols = line.split(column_delimiter)
 					if cols[column_index]:
-						genes = [*map(lambda s: s.lower(), cols[column_index].split(gene_delimiter))]
-						if gene_name.lower() in genes:
+						genes = set(map(lambda s: s.lower(), cols[column_index].split(gene_delimiter)))
+						if gene_set & genes:
 							output_file.write(line)
 
 
@@ -208,7 +209,7 @@ if __name__ == '__main__':
 	parser.add_argument('--head', help="if there is a head row", action='store', dest='head')
 	parser.add_argument('--column_delimiter', help="column delimiter", action='store', dest='column_delimiter')
 	parser.add_argument('--gene_delimiter', help="gene delimiter", action='store', dest='gene_delimiter')
-	parser.add_argument('--gene_name', help="gene name", action='store', dest='gene_name')
+	parser.add_argument('--gene_names', help="gene name", action='store', dest='gene_names')
 	parser.add_argument('--output_file', help='The output file', action='store', dest='output_file')
 
 	args = parser.parse_args()
@@ -228,7 +229,7 @@ if __name__ == '__main__':
 	elif args.action == 'search_by_gene_name':
 		data_analyzer.search_by_gene_name(args.source_file,
 										  int(args.columns.split(',')[0]),
-										  args.gene_name,
+										  args.gene_names,
 										  args.column_delimiter,
 										  args.gene_delimiter,
 										  head,
