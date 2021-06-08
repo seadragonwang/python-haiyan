@@ -2,7 +2,10 @@ import argparse
 import logging
 
 import numpy as np
+import requests
+import json
 
+from urllib.parse import urlencode
 
 class InvalidParameterValueException(Exception):
 	def __init__(self, message):
@@ -198,6 +201,48 @@ class DataAnalyzer:
 						if gene_set & genes:
 							output_file.write(line)
 
+	def get_gene_name_by_id(self, input_filename, column_index, column_delimiter, head, output_filename):
+		with open(output_filename, 'w', newline='') as output_file:
+			with open(input_filename, newline='') as input_file:
+				head_line = None
+				gene_ids = set()
+				if head:
+					input_file.readline()
+
+				while True:
+					line = input_file.readline()
+					if not line:
+						break
+					cols = line.split(column_delimiter)
+					gene_ids.add(cols[column_index].strip('"'))
+				headers = {"Content-type": "application/x-www-form-urlencoded; charset=UTF-8","Accept": "text/plain"}
+				print(len(gene_ids))
+				body = {
+					"keep_ids": "on",
+					"input_data": "\n".join(gene_ids)
+				}
+				response = requests.post("https://www.biotools.fr/human/refseq_symbol_converter/?presenter=none", data=urlencode(body), headers=headers)
+				if response.status_code == 200:
+					genes = response.text.split("\n")
+					map = {}
+					for gene in genes:
+						fields = gene.split('\t')
+						if len(fields) == 2:
+							map[fields[0]] = fields[1]
+				input_file.seek(0)
+				if head:
+					head_line = input_file.readline().split(column_delimiter)
+					head_line.insert(column_index+1, "gene.name")
+					output_file.write(",".join(head_line))
+
+				while True:
+					line = input_file.readline()
+					if not line:
+						break
+					cols = line.split(column_delimiter)
+					cols.insert(column_index+1, map[cols[column_index].strip('"')])
+					output_file.write(",".join(cols))
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Calculate the ratio of column 6 over column 2. ")
@@ -234,6 +279,8 @@ if __name__ == '__main__':
 										  args.gene_delimiter,
 										  head,
 										  args.output_file)
+	elif args.action == 'get_gene_name':
+		data_analyzer.get_gene_name_by_id(args.source_file, int(args.columns.split(',')[0]), args.column_delimiter,head, args.output_file)
 	else:
 		usage = """
 			Here are actions supported right now:

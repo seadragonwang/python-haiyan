@@ -39,9 +39,16 @@ python data_analyzer --action merge --source_file test.amino.txt:True,test_avinp
 # Search by gene name
 ### Usages:
 python data_analyzer --action search_by_gene_name --source_file file_name_1 --column_index 15 --gene_name nf1 --column_delimiter tab --gene_delimiter ; --head True --output_file output_file_name
- 
+
 ### For example:
 python data_analyzer --action search_by_gene_name --source_file search-by-gene-name.txt --columns 8 --column_delimiter tab --gene_delimiter ; --head True --gene_name WASH7P --output_file search_by_gene_name_output.txt
+
+# Get gene name by gene feature
+### Usages
+python data_analyzer --action get_gene_name --source_file file_name --columns 2 --head True --column_delimiter , --output_file results.csv
+
+### For example
+python data_analyzer --action get_gene_name --source_file annoted_myDiff50p.csv --columns 2 --head True --column_delimiter , --output_file results.csv
 
 # Deduplicate rows of csv file based on gene name
 
