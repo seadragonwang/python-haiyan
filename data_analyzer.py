@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import requests
 import json
+import http.client
 
 from urllib.parse import urlencode
 
@@ -61,6 +62,36 @@ class DataAnalyzer:
 					yield fs[column._fields]
 				except IndexError as err:
 					logging.error(fs)
+
+	def strip(self, source_file, column_index, head, column_delimiter, field_index, field_delimiter, output_file):
+		with open(output_file, 'w', newline='') as output_file:
+			with open(source_file, 'r') as input_file:
+				while True:
+					line = input_file.readline()
+					if not line:
+						break
+					if head:
+						output_file.write(line)
+					else:
+						cols = line.split(column_delimiter)
+						fields = cols[column_index].split(field_delimiter)
+						fields.remove(fields[field_index])
+						cols[column_index] = field_delimiter.join(fields)
+						output_file.write(column_delimiter.join(cols))
+
+	def prefix(self, source_file, prefix, column_index, head, column_delimiter, output_file):
+		with open(output_file, 'w', newline='') as output_file:
+			with open(source_file, 'r') as input_file:
+				while True:
+					line = input_file.readline()
+					if not line:
+						break
+					if head:
+						output_file.write(line)
+					else:
+						cols = line.split(column_delimiter)
+						cols[column_index] = prefix + cols[column_index]
+						output_file.write(column_delimiter.join(cols))
 
 	def extract_columns(self, source_file, columns, head, output_file):
 		data = [*self._extract(source_file, head, columns)]
@@ -221,9 +252,13 @@ class DataAnalyzer:
 					"keep_ids": "on",
 					"input_data": "\n".join(gene_ids)
 				}
-				response = requests.post("https://www.biotools.fr/human/refseq_symbol_converter/?presenter=none", data=urlencode(body), headers=headers)
-				if response.status_code == 200:
-					genes = response.text.split("\n")
+				conn = http.client.HTTPSConnection("www.biotools.fr")
+				conn.request('POST', '/human/refseq_symbol_converter/?presenter=none', body=urlencode(body), headers=headers)
+				response = conn.getresponse()
+				# response = requests.post("https://www.biotools.fr/human/refseq_symbol_converter/?presenter=none", data=urlencode(body), headers=headers)
+				if response.status == 200:
+					genes = response.read().decode('ascii').split("\n")
+					print(genes)
 					map = {}
 					for gene in genes:
 						fields = gene.split('\t')
@@ -250,7 +285,11 @@ if __name__ == '__main__':
 						help="what action will be performed, valid values are extract, split, merge, calculate_ratio",
 						action='store', dest='action')
 	parser.add_argument('--source_file', help="A source file delimited by tab ", action='store', dest='source_file')
+	parser.add_argument('--column_index', help="an index of column", action='store', dest='column_index')
+	parser.add_argument('--field_index', help="an index of field", action='store', dest='field_index')
+	parser.add_argument('--field_delimiter', help="field delimiter", action='store', dest='field_delimiter')
 	parser.add_argument('--columns', help="pairs of columns", action='store', dest='columns')
+	parser.add_argument('--prefix', help="prefix a string to a column", action='store', dest='prefix')
 	parser.add_argument('--head', help="if there is a head row", action='store', dest='head')
 	parser.add_argument('--column_delimiter', help="column delimiter", action='store', dest='column_delimiter')
 	parser.add_argument('--gene_delimiter', help="gene delimiter", action='store', dest='gene_delimiter')
@@ -261,7 +300,11 @@ if __name__ == '__main__':
 	data_analyzer = DataAnalyzer()
 
 	head = True if args.head == 'True' else False
-	if args.action == 'extract':
+	if args.action == 'strip':
+		data_analyzer.strip(args.source_file, int(args.column_index), head, args.column_delimiter, int(args.field_index), args.field_delimiter, args.output_file)
+	elif args.action == 'prefix':
+		data_analyzer.prefix(args.source_file, args.prefix, int(args.column_index), head, args.column_delimiter,args.output_file)
+	elif args.action == 'extract':
 		data_analyzer.extract_columns(args.source_file, args.columns, head, args.output_file)
 	elif args.action == 'split':
 		data_analyzer.split_columns(args.source_file, args.columns, head, args.output_file)
