@@ -67,3 +67,9 @@ python3 calculate_ratio.py --source_file_1 [1st source file] --source_file_2 [2n
 # Intersect 2 files based on gene name.
 
 python3 gene_intersect.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --columns [0,7] --output_file [output file]
+
+# Strip a field from a column
+python3 data_analyzer --action strip --source_file test.csv --column_index 0 --head False --column_delimiter , --field_index 2 --field_delimiter _ --output_file results.csv
+
+# Prefix a string to  a column
+python3 data_analyzer --action prefix --source_file test.csv --column_index 0 --head False --prefix chr1: --column_delimiter , --output_file results.csv
