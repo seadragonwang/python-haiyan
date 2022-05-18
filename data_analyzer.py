@@ -21,7 +21,18 @@ class Operator:
 		self._column_name = fields[2]
 
 
-class Column:
+class MergedColumn:
+	def __init__(self, format):
+		fields = format.split('/')
+		if len(fields) != 3:
+			raise InvalidParameterValueException(
+				"Column format: column_index_1, column_index_2/connector/column_name")
+
+		self._source_columns = fields[0].split(',')
+		self._connector = fields[1]
+		self._column_name = fields[2]
+
+class SplitedColumn:
 	def __init__(self, format):
 		fields = format.split('/')
 		if len(fields) != 4:
@@ -45,8 +56,32 @@ class DataAnalyzer:
 		self._column_seperator = column_seperator
 		self._field_separator = field_separator
 
+	def intersect(self, source_file, source_file_2, head, column, output_file):
+		column_indices = column.split('/')
+		head_lines = head.split('/')
+		filter_keys = set()
+		with open(source_file, 'r') as fin:
+			for i in range(0, int(head_lines[0])):
+				fin.readline()
+			line = fin.readline()
+			while line:
+				fields = line.split("\t")
+				filter_keys.add(fields[int(column_indices[0])].strip())
+				line = fin.readline()
+
+		with open(output_file, 'w', newline='') as fout:
+			with open(source_file_2, 'r') as fin2:
+				for i in range(0, int(head_lines[1])):
+					fout.write(fin2.readline())
+				line = fin2.readline()
+				while line:
+					key = line.split("\t")[int(column_indices[1])]
+					if key in filter_keys:
+						fout.write(line)
+					line = fin2.readline()
+
 	def _extract(self, source_file, head, column):
-		column = Column(column)
+		column = SplitedColumn(column)
 		with open(source_file, 'r') as file:
 			if head:
 				file.readline()
@@ -130,34 +165,60 @@ class DataAnalyzer:
 			for row in data:
 				output_file.write(row)
 
-	def _split(self, source_file, head, column):
-		column = Column(column)
-		with open(source_file, newline='') as file:
-			column_names = []
-			if head:
-				column_names += file.readline().split(self._column_seperator)
+	def merge_columns(self, source_file, columns, head, output_file):
+		fields = columns.split('/')
+		merged_column = MergedColumn(columns)
+		with open(output_file, 'w', newline='') as output:
+			with open(source_file, newline='') as input:
+				column_names = []
+				if head:
+					column_names += input.readline().split(self._column_seperator)
 
-			column_names = column_names[0: column._column] + column._column_names + column_names[column._column + 1:]
-			yield np.array(column_names)
+				column_names = column_names + merged_column._column_name
+				yield np.array(column_names)
 
-			while True:
-				line = file.readline()
-				if not line:
-					break
-				cols = line.rstrip('\n').split(self._column_seperator)
-				try:
-					fs = np.array(cols[column._column].split(column._delimiter))
-					yield np.concatenate(
-						(np.array(cols[0: column._column]), fs[column._fields], np.array(cols[column._column + 1:])),
-						axis=0)
-				except IndexError as err:
-					logging.error(fs)
+				while True:
+					line = input.readline()
+					if not line:
+						break
+					cols = line.rstrip('\n').split(self._column_seperator)
+					new_col = ''
+					for column_index in merged_column._source_columns:
+						if new_col:
+							new_col += merged_column._connector + cols[column_index]
+						else:
+							new_col = cols[column_index]
+					cols.append(new_col)
+					output.write(self._column_seperator.join(cols))
 
 	def split_columns(self, source_file, columns, head, output_file):
 		data = [*self._split(source_file, head, columns)]
 		with open(output_file, 'w', newline='') as file:
+			column = SplitedColumn(column)
+			with open(source_file, newline='') as file:
+				column_names = []
+				if head:
+					column_names += file.readline().split(self._column_seperator)
+
+				column_names = column_names[0: column._column] + column._column_names + column_names[
+																						column._column + 1:]
+				yield np.array(column_names)
+
+				while True:
+					line = file.readline()
+					if not line:
+						break
+					cols = line.rstrip('\n').split(self._column_seperator)
+					try:
+						fs = np.array(cols[column._column].split(column._delimiter))
+						yield np.concatenate(
+							(
+							np.array(cols[0: column._column]), fs[column._fields], np.array(cols[column._column + 1:])),
+							axis=0)
+					except IndexError as err:
+						logging.error(fs)
 			for i in range(0, len(data)):
-				file.write('\t'.join(data[i]) + '\n')
+				file.write(','.join(data[i]) + '\n')
 
 	def _parse_operator(self, format):
 		for d in format.split(','):
@@ -285,6 +346,7 @@ if __name__ == '__main__':
 						help="what action will be performed, valid values are extract, split, merge, calculate_ratio",
 						action='store', dest='action')
 	parser.add_argument('--source_file', help="A source file delimited by tab ", action='store', dest='source_file')
+	parser.add_argument('--source_file_2', help="A source file delimited by tab ", action='store', dest='source_file_2')
 	parser.add_argument('--column_index', help="an index of column", action='store', dest='column_index')
 	parser.add_argument('--field_index', help="an index of field", action='store', dest='field_index')
 	parser.add_argument('--field_delimiter', help="field delimiter", action='store', dest='field_delimiter')
@@ -299,8 +361,9 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	data_analyzer = DataAnalyzer()
 
-	head = True if args.head == 'True' else False
-	if args.action == 'strip':
+	if args.action == 'intersect':
+		data_analyzer.intersect(args.source_file, args.source_file_2, args.head, args.columns, args.output_file)
+	elif args.action == 'strip':
 		data_analyzer.strip(args.source_file, int(args.column_index), head, args.column_delimiter, int(args.field_index), args.field_delimiter, args.output_file)
 	elif args.action == 'prefix':
 		data_analyzer.prefix(args.source_file, args.prefix, int(args.column_index), head, args.column_delimiter,args.output_file)
@@ -327,10 +390,15 @@ if __name__ == '__main__':
 	else:
 		usage = """
 			Here are actions supported right now:
+				- intersect
+				- strip
+				- prefix
 				- extract
 				- split
 				- merge
 				- add
-				- divide"""
+				- divide
+				- search_by_gene_name
+				- get_gene_name"""
 
 		logging.info(usage)

@@ -1,6 +1,9 @@
 # python-haiyan
 All kinds of python utility functions needed by haiyan
 
+# Intersect 2 files using one column in each file, the first file will be a small file
+python data_analyzer --action intersect --source_file file_name --source_file_2 file_name_2 --head 0/2 --columns 0/0 --output_file result.txt
+
 # Extract columns from a file
 ### Usages:
 python data_analyzer --action extract --source_file file_name -column column_index/column_separator/field_indices/column_names --output_file output_file_name
