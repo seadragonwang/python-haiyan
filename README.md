@@ -67,6 +67,9 @@ python3 calculate_ratio.py --source_file_1 [1st source file] --columns 0,1,4,5,2
 
 python3 calculate_ratio.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --columns 0,2/2,4/4 --output_file [output file]
 
+# Join 2 files based on first column
+python3 gene_join.py --source_file_1 REH_IKAROS_KD_2.txt --source_file_2 KD_r1.txt --header 1 --columns 0,1/0,1 --output result.txt
+
 # Intersect 2 files based on gene name.
 
 python3 gene_intersect.py --source_file_1 [1st source file] --source_file_2 [2nd source file] --columns [0,7] --output_file [output file]
