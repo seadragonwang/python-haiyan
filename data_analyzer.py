@@ -113,14 +113,19 @@ class DataAnalyzer:
           file.write("\t".join(list([fields[i] for i in column_indices])))
           file.write("\n")
 
-  def merge_files(self, source_file_1, source_file_2, head, output_filename):
+  def merge_files(self, source_file_1, source_file_2, output_filename):
     with open(output_filename, 'w', newline='') as output:
+      s1fs = source_file_1.split(":")
+      s2fs = source_file_2.split(":")
       with open(source_file_1, 'r', newline='') as input_file_1:
         with open(source_file_2, 'r', newline='') as input_file_2:
-          if head:
+          line = ""
+          line2 = ""
+          if bool(s1fs[1]):
             line = input_file_1.readline().rstrip('\n').rstrip("\r")
+          if bool(s2fs[1]):
             line2 = input_file_2.readline()
-            output.write(line + self._column_seperator + line2)
+          output.write(line + self._column_seperator + line2)
 
           while True:
             line = input_file_1.readline()
@@ -378,7 +383,7 @@ if __name__ == '__main__':
   elif args.action == 'split':
     data_analyzer.split_columns(args.source_file, args.columns, int(args.head), args.output_file)
   elif args.action == 'merge':
-    data_analyzer.merge_files(args.source_file, args.source_file_2, args.head, args.output_file)
+    data_analyzer.merge_files(args.source_file, args.source_file_2, args.output_file)
   elif args.action == 'concatenate':
     data_analyzer.concatenate_files(args.source_file, args.output_file)
   elif args.action == 'add':
