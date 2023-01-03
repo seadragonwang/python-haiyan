@@ -230,32 +230,27 @@ class DataAnalyzer:
 
   def divide(self, source_file, columns, head, output_file):
     operators = [*self.parse(columns)]
-    data = []
+    with open(output_file, 'w', newline='') as output:
+      with open(source_file, newline='') as input:
+        if head:
+          column_names = input.readline().rstrip('\n').split(self._column_seperator)
+          for divider in operators:
+            column_names.append(divider._column_name)
+          output.write("\t".join(column_names) + "\n")
+        while True:
+          line = input.readline()
+          if not line:
+            break
+          row = line.split(self._column_seperator)
+          for operator in operators:
+            try:
+              if float(row[operator._denominator]) > 0:
+                row.append("{:.2f}".format(float(row[operator._numerator]) / float(row[operator._denominator])))
+            except:
+              print(row)
+              exit(2)
 
-    with open(source_file, newline='') as file:
-      column_names = None
-      if head:
-        column_names = file.readline().rstrip('\n').split(self._column_seperator)
-      while True:
-        line = file.readline()
-        if not line:
-          break
-        data.append(line.rstrip('\n').split(self._column_seperator))
-    for divider in operators:
-      column_names.append(divider._column_name)
-    for row in data:
-      for operator in operators:
-        if float(row[operator._denominator]) > 0:
-          try:
-            row.append("{:.2f}".format(float(row[operator._numerator]) / float(row[operator._denominator])))
-          except:
-            print(row)
-            exit(2)
-
-    with open(output_file, 'w', newline='') as file:
-      file.write('\t'.join(column_names) + '\n')
-      for i in range(0, len(data)):
-        file.write('\t'.join(data[i]) + '\n')
+          output.write('\t'.join(row) + '\n')
 
   def add(self, source_file, columns, head, output_file):
     operators = [*self.parse(columns)]
