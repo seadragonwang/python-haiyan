@@ -117,8 +117,8 @@ class DataAnalyzer:
     with open(output_filename, 'w', newline='') as output:
       s1fs = source_file_1.split(":")
       s2fs = source_file_2.split(":")
-      with open(source_file_1, 'r', newline='') as input_file_1:
-        with open(source_file_2, 'r', newline='') as input_file_2:
+      with open(s1fs[1], 'r', newline='') as input_file_1:
+        with open(s2fs[1], 'r', newline='') as input_file_2:
           line = ""
           line2 = ""
           if bool(s1fs[1]):
