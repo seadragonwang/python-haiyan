@@ -194,7 +194,7 @@ class DataAnalyzer:
       column = SplitedColumn(columns)
       with open(source_file, newline='') as file:
         column_names = []
-        if head:
+        if eval(head):
           column_names += file.readline().split(self._column_seperator)
           column_names = column_names[0: column._column] + column._column_names + column_names[column._column + 1:]
           output.write("\t".join(column_names) + "\n")
@@ -232,7 +232,7 @@ class DataAnalyzer:
     operators = [*self.parse(columns)]
     with open(output_file, 'w', newline='') as output:
       with open(source_file, newline='') as input:
-        if head:
+        if eval(head):
           column_names = input.readline().rstrip('\n').strip("\r").split(self._column_seperator)
           for divider in operators:
             column_names.append(divider._column_name)
