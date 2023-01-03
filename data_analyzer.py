@@ -196,9 +196,9 @@ class DataAnalyzer:
         column_names = []
         if head:
           column_names += file.readline().split(self._column_seperator)
+          column_names = column_names[0: column._column] + column._column_names + column_names[column._column + 1:]
+          output.write("\t".join(column_names) + "\n")
 
-        column_names = column_names[0: column._column] + column._column_names + column_names[column._column + 1:]
-        output.write("\t".join(column_names) + "\n")
         while True:
           line = file.readline()
           if not line:
