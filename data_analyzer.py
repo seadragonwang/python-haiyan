@@ -100,7 +100,7 @@ class DataAnalyzer:
     column_items = list([x.split(":") for x in columns.split(",")])
     with open(output_file, 'w', newline='') as file:
       with open(source_file, 'r') as input:
-        if head:
+        if eval(head):
           line = input.readline()
         column_names = list([x[1] for x in column_items])
         column_indices = list([int(x[0]) for x in column_items])
