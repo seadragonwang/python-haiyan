@@ -8,48 +8,9 @@ import http.client
 
 from urllib.parse import urlencode
 
-class InvalidParameterValueException(Exception):
-	def __init__(self, message):
-		self._message = message
-
-
-class Operator:
-	def __init__(self, format):
-		fields = format.split('/')
-		self._numerator = int(fields[0])
-		self._denominator = int(fields[1])
-		self._column_name = fields[2]
-
-
-class MergedColumn:
-	def __init__(self, format):
-		fields = format.split('/')
-		if len(fields) != 3:
-			raise InvalidParameterValueException(
-				"Column format: column_index_1, column_index_2/connector/column_name")
-
-		self._source_columns = fields[0].split(',')
-		self._connector = fields[1]
-		self._column_name = fields[2]
-
-class SplitedColumn:
-	def __init__(self, format):
-		fields = format.split('/')
-		if len(fields) != 4:
-			raise InvalidParameterValueException(
-				"Column format: column_index/delimiter/[field_start-field_end|field_index_1,field_index_2]")
-		self._column = int(fields[0])
-		self._delimiter = fields[1]
-		self._column_names = fields[3].split(',')
-		fields = fields[2].split(',')
-		self._fields = []
-		for f in fields:
-			if '-' in f:
-				flds = f.split('-')
-				self._fields += [i for i in range(int(flds[0]), int(flds[1]) + 1)]
-			else:
-				self._fields.append(int(f))
-
+from field import Field
+from merged_column import MergedColumn
+from splited_column import SplitedColumn
 
 class DataAnalyzer:
 	def __init__(self, column_seperator='\t', field_separator=':'):
@@ -80,7 +41,7 @@ class DataAnalyzer:
 						fout.write(line)
 					line = fin2.readline()
 
-	def _extract(self, source_file, head, column):
+	def extract(self, source_file, head, column):
 		column = SplitedColumn(column)
 		with open(source_file, 'r') as file:
 			if head:
@@ -128,13 +89,45 @@ class DataAnalyzer:
 						cols[column_index] = prefix + cols[column_index]
 						output_file.write(column_delimiter.join(cols))
 
-	def extract_columns(self, source_file, columns, head, output_file):
-		data = [*self._extract(source_file, head, columns)]
-		with open(output_file, 'w', newline='') as file:
-			for i in range(0, len(data)):
-				file.write('\t'.join(data[i]) + '\n')
+	# def extract_columns(self, source_file, columns, head, output_file):
+	# 	with open(output_file, 'w', newline='') as file:
+	# 		with open(source_file, 'r') as input:
+	# 		for i in range(0, len(data)):
+	# 			file.write('\t'.join(data[i]) + '\n')
 
-	def merge_files(self, source_file, output_filename):
+	def select_columns(self, source_file, columns, head, output_file):
+		column_indices = list([int(i) for i in columns.split(",")])
+		with open(output_file, 'w', newline='') as file:
+			with open(source_file, 'r') as input:
+				if head:
+					line = input.readline()
+					fields = line.strip("\n").split(self._column_seperator)
+					file.write("\t".join(list([fields[i] for i in column_indices])))
+					file.write("\n")
+				while True:
+					line = input.readline()
+					if not line:
+						break
+					fields = line.strip("\n").split(self._column_seperator)
+					file.write("\t".join(list([fields[i] for i in column_indices])))
+					file.write("\n")
+
+	def merge_files(self, source_file_1, source_file_2, head, output_filename):
+		with open(output_filename, 'w', newline='') as output:
+			with open(source_file_1, 'r', newline='') as input_file_1:
+				with open(source_file_2, 'r', newline='') as input_file_2:
+					if head:
+						line = input_file_1.readline().rstrip('\n').rstrip("\r")
+						line2 = input_file_2.readline()
+						output.write(line+self._column_seperator+line2)
+
+					while True:
+						line = input_file_1.readline()
+						if not line:
+							break
+						output.write(line.rstrip('\n').rstrip("\r")+self._column_seperator+input_file_2.readline())
+
+	def concatenate_files(self, source_file, output_filename):
 		file_names = [f.split(':') for f in source_file.split(',')]
 		data = []
 		column_names = []
@@ -172,11 +165,10 @@ class DataAnalyzer:
 			with open(source_file, newline='') as input:
 				column_names = []
 				if head:
-					column_names += input.readline().split(self._column_seperator)
+					column_names += input.readline().strip("\n").split(self._column_seperator)
 
 				column_names = column_names + merged_column._column_name
-				yield np.array(column_names)
-
+				output.write("\t".join(column_names)+"\n")
 				while True:
 					line = input.readline()
 					if not line:
@@ -192,40 +184,47 @@ class DataAnalyzer:
 					output.write(self._column_seperator.join(cols))
 
 	def split_columns(self, source_file, columns, head, output_file):
-		data = [*self._split(source_file, head, columns)]
-		with open(output_file, 'w', newline='') as file:
-			column = SplitedColumn(column)
+		with open(output_file, 'w', newline='') as output:
+			column = SplitedColumn(columns)
 			with open(source_file, newline='') as file:
 				column_names = []
 				if head:
 					column_names += file.readline().split(self._column_seperator)
 
-				column_names = column_names[0: column._column] + column._column_names + column_names[
-																						column._column + 1:]
-				yield np.array(column_names)
-
+				column_names = column_names[0: column._column] + column._column_names + column_names[column._column + 1:]
+				output.write("\t".join(column_names)+"\n")
 				while True:
 					line = file.readline()
 					if not line:
 						break
 					cols = line.rstrip('\n').split(self._column_seperator)
 					try:
-						fs = np.array(cols[column._column].split(column._delimiter))
-						yield np.concatenate(
-							(
-							np.array(cols[0: column._column]), fs[column._fields], np.array(cols[column._column + 1:])),
-							axis=0)
+						fs = cols[column._column].strip('"').strip("\r").split(column._delimiter)
+						fs2 = list([fs[i] for i in column._fields])
+						fs_final = []
+						for f in fs2:
+							if "," in f:
+								fs3 = f.split(",")
+								if len(fs3) == 3:
+									fs_final.append(str(int(fs3[0])+int(fs3[1])))
+									fs_final.append(fs3[2])
+								else:
+									fs_final.append(fs3[0])
+									fs_final.append(fs3[1])
+							else:
+								fs_final.append(f)
+						output.write("\t".join(cols[0: column._column]+fs_final+cols[column._column + 1:]))
+						output.write("\n")
 					except IndexError as err:
 						logging.error(fs)
-			for i in range(0, len(data)):
-				file.write(','.join(data[i]) + '\n')
 
-	def _parse_operator(self, format):
+
+	def parse(self, format):
 		for d in format.split(','):
-			yield (Operator(d))
+			yield (Field(d))
 
 	def divide(self, source_file, columns, head, output_file):
-		operators = [*self._parse_operator(columns)]
+		operators = [*self.parse(columns)]
 		data = []
 
 		with open(source_file, newline='') as file:
@@ -250,7 +249,7 @@ class DataAnalyzer:
 				file.write('\t'.join(data[i]) + '\n')
 
 	def add(self, source_file, columns, head, output_file):
-		operators = [*self._parse_operator(columns)]
+		operators = [*self.parse(columns)]
 		data = []
 
 		with open(source_file, newline='') as file:
@@ -364,29 +363,31 @@ if __name__ == '__main__':
 	if args.action == 'intersect':
 		data_analyzer.intersect(args.source_file, args.source_file_2, args.head, args.columns, args.output_file)
 	elif args.action == 'strip':
-		data_analyzer.strip(args.source_file, int(args.column_index), head, args.column_delimiter, int(args.field_index), args.field_delimiter, args.output_file)
+		data_analyzer.strip(args.source_file, int(args.column_index), args.head, args.column_delimiter, int(args.field_index), args.field_delimiter, args.output_file)
 	elif args.action == 'prefix':
-		data_analyzer.prefix(args.source_file, args.prefix, int(args.column_index), head, args.column_delimiter,args.output_file)
-	elif args.action == 'extract':
-		data_analyzer.extract_columns(args.source_file, args.columns, head, args.output_file)
+		data_analyzer.prefix(args.source_file, args.prefix, int(args.column_index), args.head, args.column_delimiter,args.output_file)
+	elif args.action == 'select':
+		data_analyzer.select_columns(args.source_file, args.columns, args.head, args.output_file)
 	elif args.action == 'split':
-		data_analyzer.split_columns(args.source_file, args.columns, head, args.output_file)
+		data_analyzer.split_columns(args.source_file, args.columns, int(args.head), args.output_file)
 	elif args.action == 'merge':
-		data_analyzer.merge_files(args.source_file, args.output_file)
+		data_analyzer.merge_files(args.source_file, args.source_file_2, args.head, args.output_file)
+	elif args.action == 'concatenate':
+		data_analyzer.concatenate_files(args.source_file, args.output_file)
 	elif args.action == 'add':
-		data_analyzer.add(args.source_file, args.columns, head, args.output_file)
+		data_analyzer.add(args.source_file, args.columns, args.head, args.output_file)
 	elif args.action == 'divide':
-		data_analyzer.divide(args.source_file, args.columns, head, args.output_file)
+		data_analyzer.divide(args.source_file, args.columns, args.head, args.output_file)
 	elif args.action == 'search_by_gene_name':
 		data_analyzer.search_by_gene_name(args.source_file,
 										  int(args.columns.split(',')[0]),
 										  args.gene_names,
 										  args.column_delimiter,
 										  args.gene_delimiter,
-										  head,
+										  args.head,
 										  args.output_file)
 	elif args.action == 'get_gene_name':
-		data_analyzer.get_gene_name_by_id(args.source_file, int(args.columns.split(',')[0]), args.column_delimiter,head, args.output_file)
+		data_analyzer.get_gene_name_by_id(args.source_file, int(args.columns.split(',')[0]), args.column_delimiter, args.head, args.output_file)
 	else:
 		usage = """
 			Here are actions supported right now:

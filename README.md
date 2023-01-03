@@ -58,8 +58,7 @@ python data_analyzer --action get_gene_name --source_file annoted_myDiff50p.csv 
 python3 deduplicate_gene_name.py --source_file [source file] --output_file [output file]
 
 # Calculate the ratio of columns, source_file_2 is optional,
-## if only source_file_1 exist, it will only calculate ration with this file. For example, you want to have
-1st, 2nd, 5th, 6th and 2nd/6th in output file, then
+ if only source_file_1 exist, it will only calculate ration with this file. For example, you want to have 1st, 2nd, 5th, 6th and 2nd/6th in output file, then
 
 python3 calculate_ratio.py --source_file_1 [1st source file] --columns 0,1,4,5,2/5 --output_file [output file]
 
