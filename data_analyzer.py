@@ -233,12 +233,12 @@ class DataAnalyzer:
     with open(output_file, 'w', newline='') as output:
       with open(source_file, newline='') as input:
         if head:
-          column_names = input.readline().rstrip('\n').split(self._column_seperator)
+          column_names = input.readline().rstrip('\n').strip("\r").split(self._column_seperator)
           for divider in operators:
             column_names.append(divider._column_name)
           output.write("\t".join(column_names) + "\n")
         while True:
-          line = input.readline()
+          line = input.readline().strip("\n").strip("\r")
           if not line:
             break
           row = line.split(self._column_seperator)
