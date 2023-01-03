@@ -245,6 +245,7 @@ class DataAnalyzer:
             row.append("{:.2f}".format(float(row[operator._numerator]) / float(row[operator._denominator])))
           except:
             print(row)
+            exit(2)
 
     with open(output_file, 'w', newline='') as file:
       file.write('\t'.join(column_names) + '\n')
