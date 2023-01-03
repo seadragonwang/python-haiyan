@@ -376,7 +376,7 @@ if __name__ == '__main__':
   elif args.action == 'select':
     data_analyzer.select_columns(args.source_file, args.columns, args.head, args.output_file)
   elif args.action == 'split':
-    data_analyzer.split_columns(args.source_file, args.columns, int(args.head), args.output_file)
+    data_analyzer.split_columns(args.source_file, args.columns, args.head, args.output_file)
   elif args.action == 'merge':
     data_analyzer.merge_files(args.source_file, args.source_file_2, args.output_file)
   elif args.action == 'concatenate':
