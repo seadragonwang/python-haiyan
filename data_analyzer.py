@@ -103,7 +103,7 @@ class DataAnalyzer:
         if head:
           line = input.readline()
         column_names = list([x[1] for x in column_items])
-        column_indices = list([x[0] for x in column_items])
+        column_indices = list([int(x[0]) for x in column_items])
         file.write("\t".join(column_names) + "\n")
         while True:
           line = input.readline()
