@@ -97,14 +97,14 @@ class DataAnalyzer:
   # 			file.write('\t'.join(data[i]) + '\n')
 
   def select_columns(self, source_file, columns, head, output_file):
-    column_indices = list([int(i) for i in columns.split(",")])
+    column_items = list([x.split(":") for x in columns.split(",")])
     with open(output_file, 'w', newline='') as file:
       with open(source_file, 'r') as input:
         if head:
           line = input.readline()
-          fields = line.strip("\n").split(self._column_seperator)
-          file.write("\t".join(list([fields[i] for i in column_indices])))
-          file.write("\n")
+        column_names = list([x[1] for x in column_items])
+        column_indices = list([x[0] for x in column_items])
+        file.write("\t".join(column_names) + "\n")
         while True:
           line = input.readline()
           if not line:
