@@ -121,9 +121,9 @@ class DataAnalyzer:
         with open(s2fs[0], 'r', newline='') as input_file_2:
           line = ""
           line2 = ""
-          if bool(s1fs[1]):
+          if eval(s1fs[1]):
             line = input_file_1.readline().rstrip('\n').rstrip("\r")
-          if bool(s2fs[1]):
+          if eval(s2fs[1]):
             line2 = input_file_2.readline()
           output.write(line + self._column_seperator + line2)
 
